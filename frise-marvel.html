@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Marvel — Frise chronologique</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#0b1020;color:#f8fafc}
+header{position:sticky;top:0;z-index:5;background:#111827;border-bottom:1px solid #263247;padding:18px}
+h1{margin:0 0 5px;font-size:24px}
+.sub{color:#9ca3af;font-size:14px}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+button,select{background:#1f2937;color:#fff;border:1px solid #374151;border-radius:9px;padding:10px 12px;font-size:14px}
+button{cursor:pointer}
+.progress{margin-top:12px;height:8px;background:#374151;border-radius:99px;overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:#ef4444}
+main{max-width:900px;margin:auto;padding:20px 16px 60px}
+.timeline{border-left:4px solid #ef4444;padding-left:18px;margin-left:14px}
+.year{font-size:18px;font-weight:800;margin:24px 0 9px;position:relative}
+.year:before{content:"";position:absolute;left:-29px;top:3px;width:15px;height:15px;border-radius:50%;background:#ef4444;border:3px solid #0b1020}
+.card{display:flex;gap:11px;align-items:flex-start;background:#151d2e;border:1px solid #273449;border-radius:12px;padding:12px;margin:8px 0}
+.card:hover{border-color:#64748b}
+.card input{width:21px;height:21px;flex:none;margin-top:2px}
+.name{font-weight:750;line-height:1.3}
+.meta{font-size:12px;color:#9ca3af;margin-top:4px}
+.badge{display:inline-block;font-size:10px;border:1px solid #4b5563;border-radius:99px;padding:2px 6px;margin-left:6px}
+.mcu .dot{background:#3b82f6}
+.series .dot{background:#a855f7}
+.spider .dot{background:#ef4444}
+.xmen .dot{background:#f97316}
+.dot{width:10px;height:10px;border-radius:50%;margin-top:5px;flex:none}
+.hidden{display:none}
+.note{color:#9ca3af;font-size:13px;margin:10px 0 18px;line-height:1.5}
+</style>
+</head>
+<body>
+<header>
+<h1>🎬 Marvel — Frise chronologique</h1>
+<div class="sub">Année de l'histoire • coche ce que tu as vu</div>
+<div class="controls">
+<select id="universe">
+<option value="all">Tous les univers</option>
+<option value="mcu">MCU</option>
+<option value="defenders">Marvel TV / Defenders</option>
+<option value="spider">Spider-Man / Sony</option>
+<option value="xmen">X-Men / Fox</option>
+</select>
+<select id="type">
+<option value="all">Films + séries</option>
+<option value="film">Films</option>
+<option value="series">Séries</option>
+<option value="todo">À voir</option>
+</select>
+<button id="reset">Réinitialiser</button>
+</div>
+<div class="progress"><i id="bar"></i></div>
+<div id="count" class="sub" style="margin-top:6px">0 vu</div>
+</header>
+
+<main>
+<div class="note">
+🔵 MCU principal · 🟣 séries Marvel TV · 🔴 Spider-Man/Sony · 🟠 X-Men.
+<br>
+Les univers X-Men et Spider-Man de Tobey Maguire/Andrew Garfield sont affichés à part : ils ne font pas partie de la continuité principale du MCU.
+</div>
+<div id="timeline" class="timeline"></div>
+</main>
+
+<script>
+const titles=[
+["1943–1945","Captain America: First Avenger","film","mcu"],
+["1995","Captain Marvel","film","mcu"],
+["2010","Iron Man","film","mcu"],
+["2011","Iron Man 2","film","mcu"],
+["2011","L’Incroyable Hulk","film","mcu"],
+["2011","Thor","film","mcu"],
+["2012","Avengers","film","mcu"],
+["2013","Iron Man 3","film","mcu"],
+["2013","Thor: Le Monde des ténèbres","film","mcu"],
+["2014","Captain America: Le Soldat de l’hiver","film","mcu"],
+["2014","Les Gardiens de la Galaxie","film","mcu"],
+["2014","Les Gardiens de la Galaxie Vol. 2","film","mcu"],
+["2014","Daredevil — Saison 1","series","defenders"],
+["2015","Avengers: L’Ère d’Ultron","film","mcu"],
+["2015","Ant-Man","film","mcu"],
+["2015","Jessica Jones — Saison 1","series","defenders"],
+["2016","Daredevil — Saison 2","series","defenders"],
+["2016","Captain America: Civil War","film","mcu"],
+["2016","Black Widow","film","mcu"],
+["2016","Black Panther","film","mcu"],
+["2016","Spider-Man: Homecoming","film","mcu"],
+["2016–2017","Doctor Strange","film","mcu"],
+["2017","The Defenders","series","defenders"],
+["2017","Thor: Ragnarok","film","mcu"],
+["2018","Ant-Man et la Guêpe","film","mcu"],
+["2018","Avengers: Infinity War","film","mcu"],
+["2018","Daredevil — Saison 3","series","defenders"],
+["2018","The Punisher — Saison 2","series","defenders"],
+["2019","Avengers: Endgame","film","mcu"],
+["2023","Loki — Saison 1","series","mcu"],
+["2023","WandaVision","series","mcu"],
+["2024","Falcon et le Soldat de l’hiver","series","mcu"],
+["2024","Shang-Chi et la Légende des Dix Anneaux","film","mcu"],
+["2024","Eternals","film","mcu"],
+["2024","Spider-Man: Far From Home","film","mcu"],
+["2024","Spider-Man: No Way Home","film","mcu"],
+["2025","Doctor Strange in the Multiverse of Madness","film","mcu"],
+["2025","Hawkeye","series","mcu"],
+["2025","Moon Knight","series","mcu"],
+["2025","Ms. Marvel","series","mcu"],
+["2025","Thor: Love and Thunder","film","mcu"],
+["2025","She-Hulk","series","mcu"],
+["2025","Black Panther: Wakanda Forever","film","mcu"],
+["2026","Ant-Man et la Guêpe: Quantumania","film","mcu"],
+["2026","Les Gardiens de la Galaxie Vol. 3","film","mcu"],
+["2026","Secret Invasion","series","mcu"],
+["2026","Loki — Saison 2","series","mcu"],
+["2026","The Marvels","film","mcu"],
+["2026","Echo","series","mcu"],
+["2026","Agatha All Along","series","mcu"],
+["2026","Deadpool & Wolverine","film","mcu"],
+["2026","Ironheart","series","mcu"],
+["2027","Captain America: Brave New World","film","mcu"],
+["2027","Thunderbolts*","film","mcu"],
+["2027","Daredevil: Born Again — Saison 1","series","mcu"],
+["2002","Spider-Man","film","spider"],
+["2004","Spider-Man 2","film","spider"],
+["2007","Spider-Man 3","film","spider"],
+["2012","The Amazing Spider-Man","film","spider"],
+["2014","The Amazing Spider-Man 2","film","spider"],
+["1845–1979","X-Men Origins: Wolverine","film","xmen"],
+["1962","X-Men: First Class","film","xmen"],
+["1973","X-Men: Days of Future Past — passé","film","xmen"],
+["1983","X-Men: Apocalypse","film","xmen"],
+["1992","X-Men: Dark Phoenix","film","xmen"],
+["2000","X-Men","film","xmen"],
+["2003","X2","film","xmen"],
+["2006","X-Men: L’Affrontement final","film","xmen"],
+["2013","The Wolverine","film","xmen"],
+["2016","Deadpool","film","xmen"],
+["2017","Logan","film","xmen"],
+["2018","Deadpool 2","film","xmen"],
+["1997","X-Men ’97","series","xmen"]
+];
+
+let seen=new Set(JSON.parse(localStorage.getItem("marvelSeen")||"[]"));
+const list=document.getElementById("timeline");
+
+function render(){
+ list.innerHTML="";
+ const u=document.getElementById("universe").value;
+ const t=document.getElementById("type").value;
+ let last="";
+ let shown=0;
+ titles.forEach((x,i)=>{
+   const [year,name,type,uni]=x;
+   if(u!=="all"&&uni!==u)return;
+   if(t==="film"&&type!=="film")return;
+   if(t==="series"&&type!=="series")return;
+   if(t==="todo"&&seen.has(i))return;
+   shown++;
+   if(year!==last){
+     const y=document.createElement("div");
+     y.className="year";
+     y.textContent=year;
+     list.appendChild(y);
+     last=year;
+   }
+   const row=document.createElement("div");
+   row.className="card "+uni+" "+type;
+   const dot=document.createElement("span");
+   dot.className="dot";
+   const cb=document.createElement("input");
+   cb.type="checkbox";
+   cb.checked=seen.has(i);
+   cb.addEventListener("change",()=>{
+     if(cb.checked)seen.add(i);else seen.delete(i);
+     localStorage.setItem("marvelSeen",JSON.stringify([...seen]));
+     update();
+   });
+   const text=document.createElement("div");
+   const n=document.createElement("div");
+   n.className="name";
+   n.textContent=name;
+   const b=document.createElement("span");
+   b.className="badge";
+   b.textContent=type==="series"?"SÉRIE":"FILM";
+   n.appendChild(b);
+   const m=document.createElement("div");
+   m.className="meta";
+   m.textContent=uni==="mcu"?"MCU":uni==="defenders"?"Marvel TV / Defenders":uni==="spider"?"Univers Spider-Man / Sony":"Univers X-Men / Fox";
+   text.append(n,m);
+   row.append(dot,cb,text);
+   list.appendChild(row);
+ });
+ if(!shown)list.innerHTML="<p>Aucun résultat.</p>";
+}
+
+function update(){
+ document.getElementById("count").textContent=seen.size+" / "+titles.length+" vus";
+ document.getElementById("bar").style.width=(seen.size/titles.length*100)+"%";
+ render();
+}
+
+document.getElementById("universe").addEventListener("change",render);
+document.getElementById("type").addEventListener("change",render);
+document.getElementById("reset").addEventListener("click",()=>{
+ if(confirm("Réinitialiser toute ta progression ?")){
+  seen.clear();
+  localStorage.removeItem("marvelSeen");
+  update();
+ }
+});
+update();
+</script>
+</body>
+</html>
